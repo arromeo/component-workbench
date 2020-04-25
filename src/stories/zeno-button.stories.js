@@ -8,3 +8,4 @@ export default {
 
 export const WithText = () => <Button>Test</Button>;
 export const WithNoText = () => <Button />;
+export const Disabled = () => <Button disabled>Disabled Button</Button>;
