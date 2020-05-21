@@ -1,11 +1,11 @@
-import React from "react";
-import { Button } from "../zeno";
+import React from 'react'
+import { Button } from '../zeno'
 
 export default {
-  title: "Zeno Button",
-  component: Button,
-};
+  title: 'Zeno Button',
+  component: Button
+}
 
-export const WithText = () => <Button>Test</Button>;
-export const WithNoText = () => <Button />;
-export const Disabled = () => <Button disabled>Disabled Button</Button>;
+export const WithText = () => <Button>Test</Button>
+export const WithNoText = () => <Button />
+export const Disabled = () => <Button disabled>Disabled Button</Button>
