@@ -33,8 +33,8 @@ export function DragNDrop() {
           mouseMoves.pipe(
             takeUntil(documentMouseUps),
             map((mouseMoveEvent) => ({
-              xPos: mouseMoveEvent.pageX - mouseDownEvent.offsetX,
-              yPos: mouseMoveEvent.pageY - mouseDownEvent.offsetY
+              xPos: mouseMoveEvent.clientX - mouseDownEvent.offsetX,
+              yPos: mouseMoveEvent.clientY - mouseDownEvent.offsetY
             }))
           )
         )
@@ -49,7 +49,7 @@ export function DragNDrop() {
 
   return (
     <Surface ref={surfaceElem}>
-      <DraggableItem ref={draggableElem}>Testing</DraggableItem>
+      <DraggableItem ref={draggableElem}>Drag Me!</DraggableItem>
     </Surface>
   )
 }
