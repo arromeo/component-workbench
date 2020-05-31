@@ -19,9 +19,8 @@ const SlideContainer = styled.div`
   overflow: hidden;
 `
 
-const Slide = styled.div`
+const Slide = styled.img`
   position: absolute;
-  background-color: ${({ color }) => color};
   width: 800px;
   height: 450px;
 `
@@ -39,7 +38,16 @@ const ButtonContainer = styled.div`
   z-index: 2000;
 `
 
-const COLORS = ['red', 'yellow', 'pink', 'green', 'purple', 'orange', 'blue']
+const COLORS = [
+  'red.jpg',
+  'yellow.jpg',
+  'pink.jpg',
+  'green.jpg',
+  'purple.jpg',
+  'sky.jpg',
+  'brown.jpg',
+  'blue.jpg'
+]
 
 const resetPosition = (elem) => {
   elem.style.zIndex = 100
@@ -215,7 +223,7 @@ export function StickySlider() {
             ref={(ref) => slideElems.current.push(ref)}
             key={index}
             index={index}
-            color={color}
+            src={color}
           />
         ))}
       </SlideContainer>
