@@ -41,50 +41,45 @@ const ButtonContainer = styled.div`
 
 const COLORS = ['red', 'yellow', 'pink', 'green', 'purple', 'orange', 'blue']
 
+const resetPosition = (elem) => {
+  elem.style.zIndex = 100
+  elem.style.left = '0px'
+}
+
+const SLIDE_THRESHOLD_RATIO = 0.2
+const SNAP_BACK_PPMS = 2200 * (17 / 1000)
+
 export function StickySlider() {
   const nextButtonElem = useRef()
   const prevButtonElem = useRef()
   const slideElems = useRef([])
-  const currentSlide = useRef(COLORS.length - 1)
-
-  const SLIDE_THRESHOLD_RATIO = 0.2
-  const SNAP_BACK_VELOCITY_PPS = 2200 * (17 / 1000)
+  const currentSlideIndex = useRef(COLORS.length - 1)
+  const currentSlide = useRef()
 
   const reorderNext = () =>
     slideElems.current.forEach((elem, index) => {
+      const currentIndex = currentSlideIndex.current
       elem.style.zIndex =
-        index === currentSlide.current
+        currentIndex + 1 === slideElems.current.length && index === 0
+          ? 900
+          : index === currentIndex
           ? 1000
-          : index === currentSlide.current + 1 &&
-            currentSlide.current + 1 < slideElems.currentlength
+          : index === currentIndex + 1
           ? 900
           : 100
-      elem.style.visibility =
-        currentSlide.current + 1 === slideElems.current.length
-          ? index === currentSlide.current
-            ? 'visible'
-            : 'hidden'
-          : index === currentSlide.current || index === currentSlide.current + 1
-          ? 'visible'
-          : 'hidden'
     })
 
   const reorderPrev = () =>
     slideElems.current.forEach((elem, index) => {
+      const currentIndex = currentSlideIndex.current
       elem.style.zIndex =
-        index === currentSlide.current
+        currentIndex === 0 && index === slideElems.current.length - 1
+          ? 900
+          : index === currentIndex
           ? 1000
-          : index === currentSlide.current - 1 && currentSlide.current > 0
+          : index === currentIndex - 1
           ? 900
           : 100
-      elem.style.visibility =
-        currentSlide.current === 0
-          ? index === currentSlide.current
-            ? 'visible'
-            : 'hidden'
-          : index === currentSlide.current || index === currentSlide.current - 1
-          ? 'visible'
-          : 'hidden'
     })
 
   useEffect(() => {
@@ -93,74 +88,59 @@ export function StickySlider() {
     const mouseMoves = fromEvent(document, 'mousemove')
     const mouseUps = fromEvent(document, 'mouseup')
 
+    currentSlide.current = slideElems.current[currentSlideIndex.current]
+
+    const getCurrentLeft = () =>
+      Number(currentSlide.current.style.left.slice(0, -2))
+    const setCurrentLeft = (value) =>
+      (currentSlide.current.style.left = value + 'px')
+    const translateCurrent = (value) => setCurrentLeft(getCurrentLeft() + value)
+
     const nextSlideObservable = nextButtonMouseDowns
       .pipe(
-        tap(reorderNext),
+        tap({ next: reorderNext }),
         switchMap((mouseDownEvent) =>
           concat(
             mouseMoves.pipe(
-              tap((mouseMoveEvent) => {
-                const xDelta = mouseMoveEvent.pageX - mouseDownEvent.pageX
-                if (xDelta < 0)
-                  slideElems.current[currentSlide.current].style.left =
-                    xDelta + 'px'
+              tap({
+                next: (mouseMoveEvent) =>
+                  setCurrentLeft(
+                    Math.min(mouseMoveEvent.pageX - mouseDownEvent.pageX, 0)
+                  )
               }),
               takeUntil(mouseUps)
             ),
             iif(
-              () => {
-                const currentElem = slideElems.current[currentSlide.current]
-                const currentPosition = currentElem.style.left.slice(0, -2)
-
-                return Math.abs(currentPosition) < 800 * SLIDE_THRESHOLD_RATIO
-              },
+              () => Math.abs(getCurrentLeft()) < 800 * SLIDE_THRESHOLD_RATIO,
               interval(17).pipe(
-                tap(() => {
-                  const currentElem = slideElems.current[currentSlide.current]
-                  const currentPosition = Number(
-                    currentElem.style.left.slice(0, -2)
-                  )
-
-                  const xDelta = Math.min(
-                    Math.abs(currentPosition),
-                    SNAP_BACK_VELOCITY_PPS
-                  )
-
-                  const newPosition = currentPosition + xDelta
-                  currentElem.style.left = newPosition + 'px'
+                tap({
+                  next: () =>
+                    translateCurrent(
+                      Math.min(Math.abs(getCurrentLeft()), SNAP_BACK_PPMS)
+                    )
                 }),
-                takeWhile(() => {
-                  const currentElem = slideElems.current[currentSlide.current]
-                  const currentPosition = currentElem.style.left.slice(0, -2)
-                  return currentPosition < 0
-                })
+                takeWhile(() => getCurrentLeft() < 0)
               ),
               interval(17).pipe(
-                tap(() => {
-                  const currentElem = slideElems.current[currentSlide.current]
-                  const currentPosition = Number(
-                    currentElem.style.left.slice(0, -2)
-                  )
-
-                  const xDelta = Math.min(
-                    800 - Math.abs(currentPosition),
-                    SNAP_BACK_VELOCITY_PPS
-                  )
-
-                  currentElem.style.left = currentPosition - xDelta + 'px'
+                tap({
+                  next: () =>
+                    translateCurrent(
+                      -Math.min(Math.abs(getCurrentLeft()), SNAP_BACK_PPMS)
+                    )
                 }),
-                takeWhile(() => {
-                  const currentElem = slideElems.current[currentSlide.current]
-                  const currentPosition = Number(
-                    currentElem.style.left.slice(0, -2)
-                  )
-                  return Math.abs(currentPosition) < 800
-                }),
+                takeWhile(() => getCurrentLeft() > -800),
                 finalize(() => {
-                  const oldCurrent = slideElems.current[currentSlide.current]
-                  currentSlide.current = currentSlide.current + 1
-                  oldCurrent.style.zIndex = 100
-                  oldCurrent.style.left = '0px'
+                  const currentIndex = currentSlideIndex.current
+                  const elemCount = slideElems.current.length
+                  const oldCurrent = currentSlide.current
+
+                  currentSlideIndex.current =
+                    currentIndex === elemCount - 1 ? 0 : currentIndex + 1
+
+                  currentSlide.current =
+                    slideElems.current[currentSlideIndex.current]
+
+                  resetPosition(oldCurrent)
                 })
               )
             )
@@ -171,69 +151,48 @@ export function StickySlider() {
 
     const prevSlideObservable = prevButtonMouseDowns
       .pipe(
-        tap(reorderPrev),
+        tap({ next: reorderPrev }),
         switchMap((mouseDownEvent) =>
           concat(
             mouseMoves.pipe(
-              tap((mouseMoveEvent) => {
-                const xDelta = mouseDownEvent.pageX + mouseMoveEvent.pageX
-                if (xDelta > 0)
-                  slideElems.current[currentSlide.current].style.left =
-                    xDelta + 'px'
+              tap({
+                next: (mouseMoveEvent) =>
+                  setCurrentLeft(
+                    Math.max(mouseDownEvent.pageX + mouseMoveEvent.pageX, 0)
+                  )
               }),
               takeUntil(mouseUps)
             ),
             iif(
-              () =>
-                slideElems.current[currentSlide.current].style.left.slice(
-                  0,
-                  -2
-                ) <
-                800 * SLIDE_THRESHOLD_RATIO,
+              () => getCurrentLeft() < 800 * SLIDE_THRESHOLD_RATIO,
               interval(17).pipe(
-                tap(() => {
-                  const currentPosition = slideElems.current[
-                    currentSlide.current
-                  ].style.left.slice(0, -2)
-                  const xDelta = Math.min(
-                    currentPosition,
-                    SNAP_BACK_VELOCITY_PPS
-                  )
-                  slideElems.current[currentSlide.current].style.left =
-                    currentPosition - xDelta + 'px'
+                tap({
+                  next: () =>
+                    translateCurrent(
+                      -Math.min(getCurrentLeft(), SNAP_BACK_PPMS)
+                    )
                 }),
-                takeWhile(
-                  () =>
-                    slideElems.current[currentSlide.current].style.left.slice(
-                      0,
-                      -2
-                    ) > 0
-                )
+                takeWhile(() => getCurrentLeft() > 0)
               ),
               interval(17).pipe(
-                tap(() => {
-                  const currentPosition = slideElems.current[
-                    currentSlide.current
-                  ].style.left.slice(0, -2)
-                  const xDelta = Math.min(
-                    800 - currentPosition,
-                    SNAP_BACK_VELOCITY_PPS
-                  )
-                  slideElems.current[currentSlide.current].style.left =
-                    currentPosition + xDelta + 'px'
+                tap({
+                  next: () =>
+                    translateCurrent(
+                      Math.min(800 - getCurrentLeft(), SNAP_BACK_PPMS)
+                    )
                 }),
-                takeWhile(
-                  () =>
-                    slideElems.current[currentSlide.current].style.left.slice(
-                      0,
-                      -2
-                    ) < 800
-                ),
+                takeWhile(() => getCurrentLeft() < 800),
                 finalize(() => {
-                  const oldCurrent = slideElems.current[currentSlide.current]
-                  currentSlide.current = currentSlide.current - 1
-                  oldCurrent.style.zIndex = 100
-                  oldCurrent.style.left = '0px'
+                  const currentIndex = currentSlideIndex.current
+                  const elemCount = slideElems.current.length
+                  const oldCurrent = currentSlide.current
+
+                  currentSlideIndex.current =
+                    currentIndex === 0 ? elemCount - 1 : currentIndex - 1
+
+                  currentSlide.current =
+                    slideElems.current[currentSlideIndex.current]
+                  resetPosition(oldCurrent)
                 })
               )
             )
