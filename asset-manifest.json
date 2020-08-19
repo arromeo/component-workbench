@@ -1,0 +1,20 @@
+{
+  "files": {
+    "main.js": "./main.7ea96ada45417773f946.bundle.js",
+    "main.js.map": "./main.7ea96ada45417773f946.bundle.js.map",
+    "runtime~main.js": "./runtime~main.7ea96ada45417773f946.bundle.js",
+    "runtime~main.js.map": "./runtime~main.7ea96ada45417773f946.bundle.js.map",
+    "vendors~main.js": "./vendors~main.7ea96ada45417773f946.bundle.js",
+    "vendors~main.js.map": "./vendors~main.7ea96ada45417773f946.bundle.js.map",
+    "iframe.html": "./iframe.html",
+    "precache-manifest.496cc18ee7904898a3b45a3bb07870f0.js": "./precache-manifest.496cc18ee7904898a3b45a3bb07870f0.js",
+    "service-worker.js": "./service-worker.js",
+    "static/media/dvd_logo.897b101a.svg": "./static/media/dvd_logo.897b101a.svg",
+    "vendors~main.7ea96ada45417773f946.bundle.js.LICENSE.txt": "./vendors~main.7ea96ada45417773f946.bundle.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "runtime~main.7ea96ada45417773f946.bundle.js",
+    "vendors~main.7ea96ada45417773f946.bundle.js",
+    "main.7ea96ada45417773f946.bundle.js"
+  ]
+}
