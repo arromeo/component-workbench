@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef, useState } from 'react'
 import styled from 'styled-components'
 import {
   checkIfCurrentMonth,
@@ -6,6 +6,21 @@ import {
   getFirstDayOfMonth,
   getDaysInMonth
 } from '../../modules/date-time'
+
+const MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December'
+]
 
 const CalendarContainer = styled.div`
   width: 600px;
@@ -37,12 +52,17 @@ const DayGrid = styled.div`
   grid-template-columns: repeat(7, 1fr);
   width: 100%;
   height: 80%;
-  border: solid black 1px;
 `
 
 const DayGridItem = styled.div`
-  color: ${({disabled}) => disabled ? 'grey' : 'black'};
+  display: grid;
+  justify-content: center;
+  align-items: center;
+  color: ${({ disabled }) => (disabled ? 'grey' : 'black')};
 `
+
+const MonthControlButton = styled.button``
+const CalendarComponentContainer = styled.div``
 
 const generateDays = (month, year) => {
   const firstDayOfMonth = getFirstDayOfMonth(month, year)
@@ -71,18 +91,55 @@ const generateDays = (month, year) => {
 }
 
 export function Calendar() {
+  const currentDate = useRef(new Date())
+  const [selectedMonth, setSelectedMonth] = useState(() =>
+    currentDate.current.getMonth()
+  )
+  const [selectedYear, setSelectedYear] = useState(() =>
+    currentDate.current.getFullYear()
+  )
+
+  const handleMonthChange = (change) => {}
+
+  const handleMonthIncrease = () => {
+    if (selectedMonth === 11) {
+      setSelectedMonth(0)
+      setSelectedYear((prev) => prev + 1)
+    } else {
+      setSelectedMonth((prev) => prev + 1)
+    }
+  }
+
+  const handleMonthDecrease = () => {
+    if (selectedMonth === 0) {
+      setSelectedMonth(11)
+      setSelectedYear((prev) => prev - 1)
+    } else {
+      setSelectedMonth((prev) => prev - 1)
+    }
+  }
+
   return (
-    <CalendarContainer>
-      <MonthContainer>
-        <Month>
-          <h1>Jan</h1>
-          <DayGrid>{generateDays(8, 2020)}</DayGrid>
-        </Month>
-        <Month>
-          <h1>Jan</h1>
-          <DayGrid></DayGrid>
-        </Month>
-      </MonthContainer>
-    </CalendarContainer>
+    <CalendarComponentContainer>
+      <MonthControlButton onClick={handleMonthDecrease}>Previous</MonthControlButton>
+      <MonthControlButton onClick={handleMonthIncrease}>Next</MonthControlButton>
+      <CalendarContainer>
+        <MonthContainer>
+          <Month>
+            <h1>{MONTHS[selectedMonth % 12]}</h1>
+            <DayGrid>{generateDays(selectedMonth % 12, selectedYear)}</DayGrid>
+          </Month>
+          <Month>
+            <h1>{MONTHS[(selectedMonth + 1) % 12]}</h1>
+            <DayGrid>
+              {generateDays(
+                (selectedMonth + 1) % 12,
+                selectedYear + Math.floor((selectedMonth + 1) / 12)
+              )}
+            </DayGrid>
+          </Month>
+        </MonthContainer>
+      </CalendarContainer>
+    </CalendarComponentContainer>
   )
 }
